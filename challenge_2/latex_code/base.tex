@@ -1,0 +1,146 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{lipsum}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{courier}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[left=2.00cm, right=2.00cm, top=2.00cm, bottom=2.00cm]{geometry}
+\renewcommand{\lstlistingname}{Code Snippet}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+\lstset{
+    basicstyle=\footnotesize\ttfamily,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!70!black},
+    stringstyle=\color{red},
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    backgroundcolor=\color{gray!10},
+    tabsize=2,
+    showstringspaces=false
+}
+
+\title{AN2DL Report Template}
+\author{Team Name: Your Team}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{polimi.png} \hfill
+    \includegraphics[width=0.3\textwidth]{airlab.jpeg}
+    \caption{Project Partner Logos}
+\end{figure}
+
+\begin{center}
+    \textbf{AN2DL - Homework Report}\\
+    \textit{Team Members: Luca Cattani, Simone Lucca, Manuela Marenghi, Andrada Pascu}\\
+    \textit{Codabench Usernames: catta, simonelucca, manuelamarenghi, theodorap}\\
+    \textit{Matriculation Numbers: 244923, 244947, 260299, 244790}\\
+\end{center}
+
+\vspace{1cm}
+
+\section{Introduction}
+Provide a concise overview of the project’s objective and problem statement. Mention:
+\begin{itemize}
+    \item The main task (\textit{e.g., classification, regression, etc.})
+    \item Dataset details and scope
+    \item Your motivation and approach
+\end{itemize}
+
+Example: 
+\textit{"This report describes our approach to classifying eight blood cell types using EfficientNetV2-based transfer learning. Our primary goal is to achieve robust classification while addressing class imbalances."}
+
+\section{Data Preprocessing}
+Discuss preprocessing steps, including:
+\begin{itemize}
+    \item Dataset structure (training, validation, and test splits)
+    \item Outlier detection and removal
+    \item Normalization techniques
+\end{itemize}
+\begin{lstlisting}[caption={Outlier Removal Example}]
+def remove_images(images, target_image):
+    filtered_images = [img for img in images if not np.array_equal(img, target_image)]
+    return np.array(filtered_images)
+\end{lstlisting}
+
+\section{Data Augmentation}
+Explain augmentation strategies for each class. Include:
+\begin{itemize}
+    \item Class-specific augmentation
+    \item Custom augmentation pipeline
+\end{itemize}
+\begin{lstlisting}[caption={Custom Augmentation Pipeline}]
+def create_simplified_augmentation_pipeline():
+    return tf.keras.Sequential([
+        keras_cv.layers.RandAugment(value_range=(0, 255), augmentations_per_image=2, magnitude=0.5)
+    ])
+\end{lstlisting}
+
+\section{Model Architecture}
+Describe your model architecture, including:
+\begin{itemize}
+    \item Base architecture (e.g., EfficientNetV2)
+    \item Additional layers for fine-tuning
+\end{itemize}
+Include equations and a summary. 
+\begin{equation}
+\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N} y_i\log(\hat{y}_i)
+\end{equation}
+
+\section{Experiments and Results}
+Summarize experiments with tables and figures.
+\begin{table}[H]
+    \centering
+    \caption{Model Comparison}
+    \begin{tabularx}{\linewidth}{lYYYc}
+        \toprule
+        Model & Accuracy & Precision & Recall & F1 Score \\
+        \midrule
+        Baseline Model & 70.2\% & 68.1\% & 71.5\% & 69.8\% \\
+        EfficientNetV2 & \textbf{91.8\%} & \textbf{90.5\%} & \textbf{92.3\%} & \textbf{91.4\%} \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{performance_plot.png}
+    \caption{Validation Accuracy Over Time}
+\end{figure}
+
+\section{Discussion}
+Critically analyze your results:
+\begin{itemize}
+    \item What worked well?
+    \item What were the limitations?
+\end{itemize}
+
+\section{Conclusions and Future Work}
+Conclude with:
+\begin{itemize}
+    \item Key takeaways
+    \item Potential future improvements
+\end{itemize}
+
+\bibliographystyle{abbrv}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,169 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{lipsum}
+\usepackage{multicol}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\usepackage[left=2.00cm, right=2.00cm, top=2.00cm, bottom=2.00cm]{geometry}
+
+\title{AN2DL Reports Template}
+
+\begin{document}
+    
+    \begin{figure}[H]
+        \raggedright
+        \includegraphics[scale=0.4]{polimi.png} \hfill \includegraphics[scale=0.3]{airlab.jpeg}
+    \end{figure}
+
+  
+    \vspace{5mm}
+    
+    \begin{center}
+        % Select between First and Second
+        {\Large \textbf{AN2DL - Second Homework Report}}\\
+        \vspace{2mm}
+        % Change with your Team Name
+        {\Large \textbf{Artificial Neural Nuggets}}\\
+        \vspace{2mm}
+        % Team Members Information
+        {\large Luca Cattani,}
+        {\large Simone Lucca,}
+        {\large Manuela Marenghi,}
+        {\large Andrada Theodora Pascu}\\
+        \vspace{2mm}
+        % Codabench Nicknames
+        {catta,}
+        {simonelucca,}
+        {manuelamarenghi,}
+        {theodorap}\\
+        \vspace{2mm}
+        % Matriculation Numbers
+        {244923,}
+        {244947,}
+        {244790,}
+        {260299}\\
+        \vspace{5mm}
+        \today
+    \end{center}    
+    \vspace{5mm}
+    
+    \begin{multicols}{2}
+    
+        \section{Introduction}
+        The aim of this project is to develop a \textbf{deep Neural Network} for \textit{semantic image classification} of mars terrain images.
+        The main goals of this projects are:
+        \begin{itemize}
+            \item Design a versatile model able to perform semantic segmentation with high \textit{mean Intersection Over Union} (namely \textbf{mean IOU})
+            \item Explore the strengths and limitations of different state-of-the-art techniques to approach a deep learning problem
+        \end{itemize}
+
+        
+        \section{Problem Analysis}
+        Given the dataset, we analyzed it to look for patterns in the data that may have led to over-fitting.
+        The following features came to our attention:
+        \begin{enumerate}
+            \item Repeated images, not coherent to rest of the images and labels in the dataset
+            \item Restricted dataset size
+        \end{enumerate}
+        After noticing these characteristics we analyzed the \textbf{class balance} of the dataset. We noticed that a class in particular was significantly less frequently found than others (by about two orders of magnitude), thus creating a training bias.
+        
+        
+        \section{Method}
+        \subsection{Data Manipulation}
+        After the removal of outliers, we had to make up for the data imbalance, the aim was to manipulate the available data to enhance the model's generalization abilities, to do that we tested out three main approaches:
+        \begin{enumerate}
+            \item \textbf{General augmentation}\cite{randaugment}: we applied generic augmentation on images which included the label with the scarcest presence in the dataset, techniques include random application of: shifting, rotation, zooming, shear
+            \item \textbf{Copy-paste augmentation}\cite{copypaste}: we employed this augmentation to increase the presence of the scarcest class in the dataset by saving a cutout of the object (big rocks in our case) and the corresponding label, the objects were then pasted over other images in the dataset. In our case we notices that the best performance was obtained by pasting 3 to 5 big rock objects in the images (depending on the size of the pasted objects)
+            \item \textbf{Compositional image synthesis}\cite{imagesynthesis}: we tested this technique to synthetically increase the number of original images in the dataset, we cutout all distinct objects from the dataset and pasted them on fresh images, in particular we pasted more images if the class was generally less present in the dataset
+        \end{enumerate}
+        It is important to note that the aforementioned techniques were only applied to the training set, leaving the \textit{validation set untouched} (also, the images from the validation set were to fetch object cutouts).
+        Among the techniques posted above, we noticed the best inference performance when only employing \textit{copy-paste augmentation} together with random \textit{bi-dimensional shifting} of the resulting image.
+
+        
+        \subsection{Network structure}
+        As shown in the literature \cite{unet} the U-Net architecture is a very powerful tool to employ for semantic image segmentation tasks, for that reason we decided to adopt in. In particular, our variation presents the following characteristics: 
+        \begin{enumerate}
+            \item \textbf{Backbone}:
+            The backbone of our model is a nested U-Net architecture which has been shown to improve the performance of classical U-Net architectures \cite{unet++}. Lastly, we decided to use only \textit{two encode-decoder sub-networks} to reduce training time
+            \item \textbf{Additional Constructs}:
+              \begin{itemize}
+                  \item \textbf{Dilated spatial pyramid pooling}: allows the network to capture objects at various scales by using multiple parallel convolutional layers with different sampling rates. This approach ensures that the network can effectively handle objects of different sizes and contexts within the image, which is crucial for accurate segmentation \cite{dspp1}\cite{dspp2}\cite{dspp3}
+                  \item \textbf{Dual Attention Unit}: a mechanism to share information within a feature tensor, both along the spatial and the channel dimensions. This block suppresses less useful features and only allows the more informative ones to pass further \cite{dau1} \cite{dau2}. This block is compose by two branches:
+                  \begin{itemize}
+                      \item The \textit{Channel Attention} branch exploits the inter-channel relationships of the convolutional feature maps by applying squeeze and excitation operations
+                      \item The \textit{Spatial Attention} branch is designed to exploit the inter-spatial dependencies of convolutional features. The goal of Spatial Attention is to generate a spatial attention map and use it to recalibrate the incoming features
+                  \end{itemize}
+                  \item \textbf{Transformer blocks}: with multi-head attention mechanisms can improve the model's ability to capture long-range dependencies among pixels in the input image. This capability is crucial for understanding the global context and relationships between different regions of the image, which can lead to more accurate segmentation
+              \end{itemize}
+              
+            \item \textbf{Network General Features}:
+            \begin{itemize}
+            
+                \item \textbf{Optimizer}: we used Adam for its robustness, and employment of weight decay, which increases regularization by discouraging large weight values.
+                
+                \item \textbf{Loss function}: Since the model seemed to focus excessively its predictions on some classes we decided to experiment combining different loss functions. We used sparse categorical cross-entropy, dice and categorical focal cross-entropy. The first focuses on pixel classification, the second on spacial overlap of classes and the third addresses class imbalance. Even if it should have improved the overall performance, after some testing, we noticed that the best performance was obtained while only using sparse categorical cross-entropy, numerically:
+                
+                \[
+                \mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N} y_i\log(\hat{y}_i)
+                \]
+                
+                \item \textbf{Reduce LR On Plateau}: it updates the values of the learning rate dynamically. In doing so, it improves performance, fastens convergence, and reduces instability.
+                
+                \item \textbf{Early stopping}: When the validation error starts increasing, the training comes to a stop and the model with the highest validation accuracy is restored. A patience value was used in order to avoid stopping too early due to oscillations (in our case patience was set to 30 epochs).
+                
+            \end{itemize}             
+        \end{enumerate}
+            
+
+       
+
+        \section{Experiments}
+        The first experimentation phase aimed at finding a reasonably good performative base structure for the model. We started with a single U-Net, depth three (first). Afterwards we decided to increase the complexity of the overall structure and combined two U-Nets (second). Than we experimented with its depth, setting it to four, in the attempt to capture more complex, abstract features and improve performance (third). 
+        The second phase focused on augmentation and oversampling (fourth).
+        The third one on the implementation of new layers. We started by introducing the Dilated Spatial Pyramid Pooling, that can capture both global and local contextual information (fifth). After that we included the transformers, more precisely we added an encoder and a decoder before and after the bottleneck of both U-Nets, in order to capture distant pixels relationships (sixth). Finally we decided to replace the transformers with a dual attention unit, because we wanted to try another feature calibration method (seventh). Between one phase and the other we performed hyper-parameter tuning and in the end selected the best model belonging to each phase.
+        \begin{table}[H]
+            \centering
+            \setlength{\tabcolsep}{3pt}
+            \caption{Empirical results obtained from the different experiments}
+            \begin{tabularx}{\linewidth}{lYY}
+                \toprule
+                 Experiments & val. Mean IOU & Inference Mean IOU\\
+                \midrule
+                first  & 43.92 & 42.38\\
+                second  & 48.04 & 45.63\\
+                third  & 48.05 & 47.03\\
+                fourth  & 56.82 & 50.47\\
+                fifth  & 63.29 & 69.70\\
+                sixth  & 64.01 & 68.53\\
+                seventh  & 64.90 & 69.91\\
+               
+                \bottomrule
+            \end{tabularx}
+            \label{tb:Measurements}
+        \end{table}
+        The results show that more or less by correctly choosing the complexity of the model and introducing an effective feature extractor it is possible to achieve a reasonably good performance.
+        \\
+        
+
+        \section{Results}
+        Empirical results show that the best performance is obtained using the Dual Attention Unit Block and Dilated Spatial Pyramid Pooling, this is justified by the fact that these components improve the model's ability to focus on relevant features and capture multi-scale contextual information, leading to more accurate and consistent predictions.
+        \section{Discussion}
+        Considering the assignment, and the results we obtained, it is important to observe the following:
+        \begin{itemize}
+            \item Although one may expect transformers to improve the performance of the model in our use case, the best results were obtained without them, probably due to overfitting.
+            \item Despite augmentation being a fundamental tool to improve the model's performance in generalization, it is important to note that when we employing overcomplicated preprocessing pipelines, the model's performance may suffer.
+        \end{itemize}
+        \section{Conclusions}
+        Future work should focus on implementing an improved augmentation pipeline, making better use of compositional image synthesis, which should provide finer tuning of training images. In a scenario where training times are not as important as in our case, larger architectures should be used to improve performance (increasing the the network nesting a depth). Lastly, finding a way to make use of transformers, in a more subtle way could in fact improve the model's performance.  
+        \bibliography{references}
+        \bibliographystyle{abbrv}
+    
+    \end{multicols}
+\end{document}
