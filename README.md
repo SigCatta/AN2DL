@@ -14,7 +14,7 @@ Welcome to the **Artificial Neural Nuggets** GitHub repository! This project con
   - Fine-tuning: freezing batch norm layers, optimizing with Adam, early stopping, and learning rate scheduling.
 - **Results**:
   - Achieved **98.88% accuracy** with **EfficientNetV2S**, with strong precision and recall metrics.
-- 📄 Read the full report: [`report.pdf`](./challenge_1/report.pdf)
+- 📄 Read the full report: [`report.pdf`](./classification/report.pdf)
 
 ### 2. Mars Terrain Semantic Segmentation
 
@@ -25,7 +25,7 @@ Welcome to the **Artificial Neural Nuggets** GitHub repository! This project con
   - Loss function tuning: experimented with Dice, Focal, and Sparse Categorical Cross-Entropy; final model used the latter.
 - **Results**:
   - Achieved **69.91% mean IOU** using Dual Attention + DSPP blocks.
-- 📄 Read the full report: [`report.pdf`](./challenge_2/report.pdf)
+- 📄 Read the full report: [`report.pdf`](./segmentation/report.pdf)
 
 ---
 
